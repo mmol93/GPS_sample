@@ -7,6 +7,7 @@ import android.location.LocationListener
 import android.location.LocationManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import com.example.gps_sample.databinding.ActivityMainBinding
 
@@ -33,15 +34,16 @@ class MainActivity : AppCompatActivity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         for (permission in grantResults){
+            // 권한 상태 확인 후 승인 안된거 있으면 토스트 띄우고 진행하지 않기
             if (permission == PackageManager.PERMISSION_DENIED){
+                Toast.makeText(this, "권한을 승인하지 않으면 GPS 사용불가", Toast.LENGTH_SHORT).show()
                 return
             }
         }
         // 위치 정보를 관리하는 매니저를 추출
         val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
 
-        // 저장되어 있는 위치 정보값을 가져온다
-        // 즉, 제일 최근 위치 정보값을 가져온다
+        // 저장되어 있는 위치 정보값을 가져온다 -> 즉, 제일 최근 위치 정보값을 가져온다
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
             PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_COARSE_LOCATION
