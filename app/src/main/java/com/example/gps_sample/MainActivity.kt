@@ -2,14 +2,14 @@ package com.example.gps_sample
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.location.Location
-import android.location.LocationListener
-import android.location.LocationManager
-import androidx.appcompat.app.AppCompatActivity
+import android.location.*
 import android.os.Bundle
-import android.widget.Toast
+import android.util.Log
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.example.gps_sample.databinding.ActivityMainBinding
+import java.util.*
+
 
 class MainActivity : AppCompatActivity() {
     // 얻어야 하는 권한의 리스트
@@ -20,7 +20,8 @@ class MainActivity : AppCompatActivity() {
     lateinit var binder : ActivityMainBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binder = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binder.root)
 
         // 권한 리스트에 있는 권한 요청하기
         requestPermissions(permission_list, 0)
@@ -34,16 +35,15 @@ class MainActivity : AppCompatActivity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         for (permission in grantResults){
-            // 권한 상태 확인 후 승인 안된거 있으면 토스트 띄우고 진행하지 않기
             if (permission == PackageManager.PERMISSION_DENIED){
-                Toast.makeText(this, "권한을 승인하지 않으면 GPS 사용불가", Toast.LENGTH_SHORT).show()
                 return
             }
         }
-        // 위치 정보를 관리하는 매니저를 추출
+        // 위치 정보를 관리하는 매니저 객체를 가져온다
         val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
 
-        // 저장되어 있는 위치 정보값을 가져온다 -> 즉, 제일 최근 위치 정보값을 가져온다
+        // 저장되어 있는 위치 정보값을 가져온다
+        // 즉, 제일 최근 위치 정보값을 가져온다
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
             PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_COARSE_LOCATION
@@ -75,6 +75,7 @@ class MainActivity : AppCompatActivity() {
             if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)){
                 locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0f, listener)
             }
+
         }
         // 측정 중단
         binder.button2.setOnClickListener {
@@ -83,9 +84,25 @@ class MainActivity : AppCompatActivity() {
     }
     fun showInfo(location : Location){
         if (location != null){
+            // 위도와 경도를 이용하여 도시 이름 가져오기
+            val geocoder = Geocoder(this, Locale.getDefault())
+            // address에는 GPS 결과에 따른 후보군들이 리스트 형태로 들어간다
+            // maxResults는 해당 후보를 몇 개를 선정할지 결정(숫자가 낮은 것을 권장함)
+            // 즉, address[0]에는 1번 후보가 들어가 있는 것임
+            val addresses: List<Address> = geocoder.getFromLocation(location.latitude, location.longitude, 1)
+            var test = ""
+            if (addresses.isNotEmpty()) {
+                Log.d("test", "${addresses[0]}")
+                Log.d("test", "$addresses")
+                test = addresses[0].postalCode
+            }
             binder.textView.text = "Provider: ${location.provider}"
             binder.textView2.text = "위도: ${location.latitude}"
             binder.textView3.text = "경도: ${location.longitude}"
+            binder.textView4.text = "나라 이름: ${addresses[0].countryName}"
+            binder.textView5.text = "도 이름: ${addresses[0].adminArea}"
+            binder.textView6.text = "도시 이름: ${addresses[0].locality}"
+            binder.textView7.text = "거리 이름은 들어있지 않다"
         }
     }
 }
